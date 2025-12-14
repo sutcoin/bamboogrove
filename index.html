@@ -189,9 +189,14 @@
       entries.forEach(([id, item]) => {
         const div = document.createElement("div");
         div.className = "admin-item";
+
+        const messageText = item.message?.trim()
+          ? item.message
+          : "<i style='color:gray'>(내용 없음)</i>";
+
         div.innerHTML = `
           <div class="admin-time">${formatDate(item.timestamp || Date.now())}</div>
-          ${item.message}
+          ${messageText}
           <br/>
           <button onclick="deleteEntry('${id}')">삭제</button>
         `;
