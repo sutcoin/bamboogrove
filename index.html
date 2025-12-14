@@ -18,11 +18,16 @@
       background-repeat: no-repeat;
       background-attachment: fixed;
     }
-    h1 { font-size: 1.8em; margin-bottom: 20px; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
     .container {
       max-width: 500px;
       margin: 0 auto;
-      background: rgba(255, 255, 255, 0.9); /* 반투명 배경 */
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 12px;
       padding: 30px 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -65,15 +70,26 @@
     }
 
     .admin-item {
-      padding: 8px 0;
+      padding: 12px 0;
       border-bottom: 1px solid #ddd;
       font-size: 0.95em;
+      text-align: left;
+    }
+
+    .admin-time {
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 6px;
     }
 
     .warning {
       color: red;
       font-size: 0.9em;
       margin-top: 4px;
+    }
+
+    #adminList {
+      padding-top: 50px;
     }
   </style>
 
@@ -101,7 +117,15 @@
     const db = getDatabase(app);
 
     let submissions = {};
-    const titleEl = document.getElementById("title");
+
+    function formatDate(ms) {
+      const date = new Date(ms);
+      const MM = date.getMonth() + 1;
+      const dd = date.getDate();
+      const hh = date.getHours();
+      const mm = date.getMinutes();
+      return `${MM}월${dd}일${hh}시${mm}분`;
+    }
 
     function loadSubmissions(callback) {
       const submissionsRef = ref(db, 'submissions');
@@ -128,7 +152,12 @@
         return;
       }
 
-      push(ref(db, 'submissions'), { message });
+      const submission = {
+        message,
+        timestamp: Date.now()
+      };
+
+      push(ref(db, 'submissions'), submission);
       alert("소리가 대나무숲에 남겨졌어요 🌿");
       messageEl.value = "";
     };
@@ -151,17 +180,18 @@
       const list = document.getElementById("adminList");
       list.innerHTML = "";
 
-      const entries = Object.entries(submissions);
+      const entries = Object.entries(submissions).reverse();
       if (entries.length === 0) {
         list.innerHTML = "<p>등록된 글이 없습니다.</p>";
         return;
       }
 
-      entries.forEach(([id, item], index) => {
+      entries.forEach(([id, item]) => {
         const div = document.createElement("div");
         div.className = "admin-item";
         div.innerHTML = `
-          ${index + 1}. ${item.message}
+          <div class="admin-time">${formatDate(item.timestamp || Date.now())}</div>
+          ${item.message}
           <br/>
           <button onclick="deleteEntry('${id}')">삭제</button>
         `;
