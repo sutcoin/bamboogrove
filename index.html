@@ -10,18 +10,22 @@
     * { box-sizing: border-box; font-family: 'SUIT', sans-serif; }
     body {
       margin: 0;
-      background: #f0f0f0;
       padding: 30px 10px;
       text-align: center;
+      background-image: url('bg.jpg');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
     }
-    h1 { font-size: 1.8em; margin-bottom: 20px; white-space: nowrap; }
+    h1 { font-size: 1.8em; margin-bottom: 20px; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
     .container {
       max-width: 500px;
       margin: 0 auto;
-      background: white;
+      background: rgba(255, 255, 255, 0.9); /* 반투명 배경 */
       border-radius: 12px;
       padding: 30px 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       position: relative;
     }
     textarea {
@@ -107,7 +111,6 @@
       });
     }
 
-    // 소리지르기
     window.submitForm = () => {
       const messageEl = document.getElementById("message");
       const warningEl = document.getElementById("warning");
@@ -130,7 +133,6 @@
       messageEl.value = "";
     };
 
-    // 관리자 모드
     window.openAdminPanel = () => {
       const pw = prompt("관리자 비밀번호를 입력하세요:");
       if (pw !== "admin123") {
