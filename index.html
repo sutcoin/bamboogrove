@@ -60,9 +60,17 @@
       cursor: pointer;
     }
 
-    .admin-item { padding: 6px 0; border-bottom: 1px solid #ccc; }
+    .admin-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #ddd;
+      font-size: 0.95em;
+    }
 
-    .warning { color: red; font-size: 0.9em; }
+    .warning {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 4px;
+    }
   </style>
 
   <script type="module">
@@ -82,60 +90,47 @@
       projectId: "participation-4f85e",
       storageBucket: "participation-4f85e.appspot.com",
       messagingSenderId: "694493909568",
-      appId: "1:694493909568:web:1ebf7b9394e2ddce3d05a5",
-      measurementId: "G-6T8L975CVQ"
+      appId: "1:694493909568:web:1ebf7b9394e2ddce3d05a5"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let submissions = [];
-    let submissionMap = {};
+    let submissions = {};
+    const titleEl = document.getElementById("title");
 
     function loadSubmissions(callback) {
       const submissionsRef = ref(db, 'submissions');
       onValue(submissionsRef, (snapshot) => {
-        submissions = [];
-        submissionMap = {};
-        snapshot.forEach((childSnapshot) => {
-          const item = childSnapshot.val();
-          submissions.push(item);
-          submissionMap[childSnapshot.key] = item;
-        });
+        submissions = snapshot.val() || {};
         if (callback) callback();
       });
     }
 
-    // ---------------------- 소리지르기 ----------------------
+    // 소리지르기
     window.submitForm = () => {
-      const message = document.getElementById("message").value.trim();
-      const warning = document.getElementById("warning");
-      warning.textContent = "";
+      const messageEl = document.getElementById("message");
+      const warningEl = document.getElementById("warning");
+      const message = messageEl.value.trim();
+
+      warningEl.textContent = "";
 
       if (!message) {
         alert("내용을 입력해주세요.");
         return;
       }
 
-      if (message.length > 100) {
-        warning.textContent = "100자 이내로 써주세요.";
+      if (message.length > 300) {
+        warningEl.textContent = "300자 이내로 써주세요.";
         return;
       }
 
-      const submission = { message };
-      push(ref(db, 'submissions'), submission);
-
-      alert("소리치기 완료!");
-      document.getElementById("message").value = "";
+      push(ref(db, 'submissions'), { message });
+      alert("소리가 대나무숲에 남겨졌어요 🌿");
+      messageEl.value = "";
     };
 
-    // ---------------------- 뒤로가기 ----------------------
-    window.goBack = () => {
-      document.getElementById("mainForm").style.display = "block";
-      document.getElementById("adminPanel").style.display = "none";
-    };
-
-    // ---------------------- 관리자 모드 ----------------------
+    // 관리자 모드
     window.openAdminPanel = () => {
       const pw = prompt("관리자 비밀번호를 입력하세요:");
       if (pw !== "admin123") {
@@ -145,6 +140,7 @@
 
       document.getElementById("mainForm").style.display = "none";
       document.getElementById("adminPanel").style.display = "block";
+      document.getElementById("pageTitle").textContent = "대나무숲 관리";
 
       loadSubmissions(renderAdminList);
     };
@@ -153,16 +149,18 @@
       const list = document.getElementById("adminList");
       list.innerHTML = "";
 
-      if (submissions.length === 0) {
-        list.innerHTML = "<p>등록된 메시지가 없습니다.</p>";
+      const entries = Object.entries(submissions);
+      if (entries.length === 0) {
+        list.innerHTML = "<p>등록된 글이 없습니다.</p>";
         return;
       }
 
-      Object.entries(submissionMap).forEach(([id, item], index) => {
+      entries.forEach(([id, item], index) => {
         const div = document.createElement("div");
         div.className = "admin-item";
         div.innerHTML = `
           ${index + 1}. ${item.message}
+          <br/>
           <button onclick="deleteEntry('${id}')">삭제</button>
         `;
         list.appendChild(div);
@@ -171,19 +169,34 @@
 
     window.deleteEntry = (id) => {
       if (confirm("정말 삭제하시겠습니까?")) {
-        remove(ref(db, `submissions/${id}`));
+        remove(ref(db, 'submissions/' + id));
       }
+    };
+
+    window.goBack = () => {
+      document.getElementById("mainForm").style.display = "block";
+      document.getElementById("adminPanel").style.display = "none";
+      document.getElementById("pageTitle").textContent = "대나무숲";
     };
   </script>
 </head>
 
 <body>
 
-  <h1>대나무숲</h1>
+  <h1 id="pageTitle">대나무숲</h1>
 
   <!-- 메인 화면 -->
   <div class="container" id="mainForm">
-    <textarea id="message" maxlength="100" rows="5" placeholder="어떤 이야기든 익명으로 남길 수 있는 대나무숲 입니다. 마음에 담긴 소원이나 응원 그리고 아이디어는 물론, 답답한 속이 조금이나마 시원해질 수 있따면 욕을 남기셔도 좋습니다. ^^"></textarea>
+    <textarea
+      id="message"
+      rows="6"
+      maxlength="300"
+      placeholder="어떤 이야기든 익명으로 남길 수 있는 대나무숲 입니다.
+마음에 담긴 소원이나 응원 그리고 아이디어는 물론,
+답답한 속이 조금이나마 시원해질 수 있다면 욕을 남기셔도 좋습니다. ^^
+
+★300자 이내로 써주세요.★"
+    ></textarea>
     <div id="warning" class="warning"></div>
     <button class="btn btn-submit" onclick="submitForm()">소리지르기</button>
     <button class="btn btn-admin" onclick="openAdminPanel()">👤 관리자 모드</button>
@@ -192,7 +205,6 @@
   <!-- 관리자 패널 -->
   <div class="container" id="adminPanel" style="display:none;">
     <button class="back-btn" onclick="goBack()">뒤로가기</button>
-    <h3>📋 대나무숲 관리</h3>
     <div id="adminList"></div>
   </div>
 
